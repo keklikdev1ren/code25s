@@ -3,160 +3,232 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Görevler & Bucket List</title>
+<title>Kümülatif Veri Takip</title>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',Arial,sans-serif;padding:10px;background-color:#f4f7f9;color:#2c3e50}
-.page{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-h1{text-align:center;font-size:22px;margin:6px 0}h3{color:#34495e;font-size:17px;margin-bottom:10px}
-.card{background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);padding:16px}
-.card.yellow{border:2px solid #f1c40f;background:#fffdf0}.card.red{border:2px solid #e74c3c;background:#fff6f5}
-.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.cal-title{font-weight:bold;font-size:17px;flex:1;text-align:center}
-.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid #ccc;background:#ecf0f1;cursor:pointer;font-size:18px;line-height:1;flex:0 0 auto}.icon-btn:hover{background:#dfe6e9}
-.weekdays,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.weekdays div{text-align:center;font-size:12px;font-weight:bold;color:#7f8c8d;padding:4px 0}
-.cd{height:42px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.cd:hover{background:#ecf0f1}
-.cd.today{border:2px solid #3498db}.cd.sel{background:#3498db;color:#fff}.cd.empty{border:none;background:none;cursor:default}
-.dot{width:6px;height:6px;border-radius:50%}.dot.g{background:#2ecc71}.dot.y{background:#f1c40f}.dot.r{background:#e74c3c}
-.row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:2px dotted #bbb}
-.chk{width:24px;height:24px;border:2px solid #7f8c8d;border-radius:5px;flex:0 0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;font-size:16px}.chk.on{background:#2ecc71;border-color:#27ae60}
-.rt{flex:1;min-width:0;word-break:break-word}.rt.done{color:#95a5a6;text-decoration:line-through}.rt small{color:#7f8c8d}
-.dots{width:32px;height:32px;border-radius:50%;border:1px solid #bbb;background:#f8f9fa;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;flex:0 0 auto}.dots:hover{background:#dfe6e9}
-.add-row{display:flex;gap:8px;margin-top:12px}.add-row input{flex:1;min-width:0}
-input[type=text],input[type=date],input[type=time],select{padding:10px;font-size:15px;border:1px solid #ccc;border-radius:6px;width:100%}
-.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;color:#fff;font-size:15px;background:#3498db;box-shadow:0 3px #2980b9}.btn:active{transform:translateY(2px);box-shadow:0 1px #2980b9}
-.btn.red{background:#e74c3c;box-shadow:0 3px #c0392b}.btn.green{background:#27ae60;box-shadow:0 3px #229954}.btn.big{width:100%;padding:13px;font-size:17px}
-.ann{padding:8px 4px;border-bottom:1px solid #f1e6a8;font-size:15px}.ann:last-child{border:none}.empty-note{color:#95a5a6;text-align:center;padding:10px;font-size:14px}
-.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(0,0,0,.5)}
-.modal-content{background:#fefefe;margin:4% auto;padding:20px;border-radius:12px;width:92%;max-width:560px;max-height:90vh;overflow-y:auto}
-.close-modal{color:#aaa;float:right;font-size:32px;font-weight:bold;cursor:pointer;line-height:20px}.close-modal:hover{color:#000}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.form-grid .full{grid-column:1/-1}.form-grid label{font-size:12px;color:#7f8c8d;display:block;margin-bottom:2px}
-.prop{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;font-size:14px}.prop input{margin-top:3px;width:18px;height:18px}
-.rline{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dotted #ccc;font-size:14px}.rline span{flex:1}.tag{font-size:11px;padding:2px 6px;border-radius:4px;background:#ecf0f1;margin-right:4px}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',Arial,sans-serif;padding:10px;background-color:#f4f7f9}.container{display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}.data-section{background-color:white;border:1px solid #ddd;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);width:100%;max-width:400px}h1{color:#2c3e50;margin-bottom:20px;text-align:center;font-size:24px}h3{color:#34495e;border-bottom:2px solid #ecf0f1;padding-bottom:10px;margin-top:0;margin-bottom:15px;font-size:18px}.button-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.button-grid button{padding:15px;font-size:16px;cursor:pointer;border:none;border-radius:8px;transition:all 0.2s;font-weight:bold;background-color:#ecf0f1}.button-grid button:hover{background-color:#bdc3c7;transform:translateY(-2px)}.button-grid button:active{transform:translateY(0)}#save-button{margin-top:20px;padding:12px 25px;background-color:#2ecc71;color:white;border:none;border-radius:8px;cursor:pointer;width:100%;font-size:17px;transition:background-color 0.2s;box-shadow:0 4px #27ae60}#save-button:active{box-shadow:0 1px #27ae60;transform:translateY(3px)}.action-btn{padding:12px 25px;color:white;border:none;border-radius:8px;cursor:pointer;width:100%;font-size:17px;transition:background-color 0.2s;margin-bottom:10px}.action-btn.blue{background-color:#3498db;box-shadow:0 4px #2980b9}.action-btn.blue:active{box-shadow:0 1px #2980b9;transform:translateY(3px)}.action-btn.purple{background-color:#9b59b6;box-shadow:0 4px #8e44ad}.action-btn.purple:active{box-shadow:0 1px #8e44ad;transform:translateY(3px)}.action-btn.red{background-color:#e74c3c;box-shadow:0 4px #c0392b}.action-btn.red:active{box-shadow:0 1px #c0392b;transform:translateY(3px)}.action-btn.orange{background-color:#e67e22;box-shadow:0 4px #d35400}.action-btn.orange:active{box-shadow:0 1px #d35400;transform:translateY(3px)}.action-btn.green{background-color:#27ae60;box-shadow:0 4px #229954}.action-btn.green:active{box-shadow:0 1px #229954;transform:translateY(3px)}#current-cumulative-value{font-size:20px;font-weight:bold;margin-top:15px;text-align:center;color:#e74c3c;padding:10px;border:2px dashed #e74c3c;border-radius:8px}input[type="date"],input[type="number"]{padding:10px;font-size:16px;border:1px solid #ccc;border-radius:6px;width:100%;margin-bottom:15px}#selected-value{font-size:20px;color:#2980b9;display:block;margin-bottom:15px}.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.5)}.modal-content{background-color:#fefefe;margin:2% auto;padding:20px;border-radius:12px;width:90%;max-width:1200px;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto}.close-modal{color:#aaa;float:right;font-size:32px;font-weight:bold;cursor:pointer;line-height:20px}.close-modal:hover,.close-modal:focus{color:#000}.modal-chart-wrapper{position:relative;height:350px;margin:20px 0}.date-range-control{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:20px;flex-wrap:wrap}.range-btn{padding:8px 16px;background-color:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background-color 0.2s}.range-btn:hover{background-color:#2980b9}.range-btn:active{transform:translateY(2px)}#days-range-input{padding:8px;font-size:14px;border:2px solid #3498db;border-radius:6px;width:120px;text-align:center}.chart-title{text-align:center;color:#2c3e50;margin-bottom:15px;font-size:16px}.bonus-control{background-color:#f8f9fa;padding:15px;border-radius:8px;margin-top:15px;border:1px solid #ddd}.bonus-control label{display:block;font-weight:bold;margin-bottom:8px;color:#2c3e50}.trend-box{background-color:#ecf0f1;padding:15px;border-radius:8px;margin:10px 0;border-left:4px solid #3498db;font-size:14px}.trend-up{border-left-color:#2ecc71;color:#27ae60}.trend-down{border-left-color:#e74c3c;color:#c0392b}.s-parameter-control{background-color:#f8f9fa;padding:15px;border-radius:8px;border:2px solid #3498db;display:flex;align-items:center;gap:8px;margin:15px 0}.s-parameter-control label{font-weight:bold;color:#2c3e50;font-size:16px;margin:0}.s-parameter-control input{padding:8px 12px;font-size:16px;border:2px solid #3498db;border-radius:6px;width:80px;text-align:center}.calc-results{background-color:#ecf0f1;padding:20px;border-radius:8px;margin:20px 0}.calc-results h4{color:#2c3e50;margin-bottom:15px}.calc-item{padding:10px;margin:8px 0;background-color:white;border-radius:6px;border-left:4px solid #3498db;font-size:15px}.slope-display{background-color:#fff3cd;padding:15px;border-radius:8px;border-left:4px solid #ffc107;font-size:16px;font-weight:bold;color:#856404;margin:10px 0}.today-value-display{background-color:#d1ecf1;padding:15px;border-radius:8px;border-left:4px solid #17a2b8;font-size:16px;font-weight:bold;color:#0c5460;margin:10px 0}.missing-dates-container{background-color:#fff3cd;padding:20px;border-radius:8px;margin-top:20px;border-left:4px solid #ffc107}.missing-dates-list{display:flex;flex-wrap:wrap;gap:8px}.missing-date-item{background-color:white;padding:6px 12px;border-radius:4px;font-size:13px;color:#856404;border:1px solid #ffc107}.prediction-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin:20px 0}.prediction-card{background-color:white;padding:15px;border-radius:8px;border-left:4px solid #3498db;box-shadow:0 2px 8px rgba(0,0,0,0.1)}.prediction-card h5{color:#2c3e50;margin-bottom:10px;font-size:14px}.prediction-card .value{font-size:18px;font-weight:bold;color:#e74c3c}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:20px 0}.calendar-day{padding:15px 5px;text-align:center;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid #ddd;transition:transform 0.2s}.calendar-day:hover{transform:scale(1.05)}.calendar-day.empty{background-color:#f8f9fa;border:none;cursor:default}.calendar-day.no-data{background-color:#95a5a6;color:white}.calendar-day.v125{background-color:#9b59b6;color:white}.calendar-day.v1{background-color:#3498db;color:white}.calendar-day.v075{background-color:#2ecc71;color:white}.calendar-day.v025{background-color:#a9dfbf;color:#2c3e50}.calendar-day.v0{background-color:#f9e79f;color:#2c3e50}.calendar-day.vm025{background-color:#f8b878;color:#2c3e50}.calendar-day.vm075{background-color:#e67e22;color:white}.calendar-day.vm1{background-color:#ec7063;color:white}.calendar-day.vm125{background-color:#e74c3c;color:white}.calendar-header{text-align:center;margin:20px 0;display:flex;justify-content:space-between;align-items:center}.calendar-header button{padding:8px 16px;background-color:#3498db;color:white;border:none;border-radius:6px;cursor:pointer}.calendar-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px;font-weight:bold;text-align:center}.calendar-weekdays div{padding:10px 5px;color:#2c3e50}@media (max-width:768px){.container{flex-direction:column}.data-section{max-width:none}h1{font-size:20px}.button-grid button{padding:12px;font-size:14px}.modal-content{width:95%;margin:5% auto;padding:15px}.modal-chart-wrapper{height:300px}.prediction-grid{grid-template-columns:1fr}}
+
+.date-range-control{flex-wrap:nowrap;gap:5px}.date-range-control .range-btn{flex:1 1 0;min-width:0;padding:8px 4px;font-size:13px;white-space:nowrap}.date-range-control input[type="number"]{flex:1 1 0;min-width:0;width:auto!important;max-width:110px;margin-bottom:0;padding:8px 4px;font-size:14px;text-align:center}
+.bonus-row{display:flex;gap:6px;align-items:stretch;flex-wrap:nowrap}.bonus-row input[type="number"]{flex:1 1 0;min-width:0;width:auto;margin-bottom:0;padding:8px 6px;font-size:15px;text-align:center}.bonus-row .range-btn{flex:0 0 auto;padding:8px 10px}.bonus-last{flex:0 0 auto;display:flex;align-items:center;padding:0 10px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:13px;color:#856404;white-space:nowrap}
+.calc-row{display:flex;gap:10px;flex-wrap:nowrap}.calc-row .calc-item{flex:1 1 0;min-width:0;margin:8px 0;text-align:center}
+#current-cumulative-value{margin-bottom:15px}
+
+.button-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;height:48px;padding:0;line-height:1.1}.button-grid button .sym{font-size:16px;font-weight:bold}.button-grid button .val{font-size:10px;font-weight:normal;color:#555;margin-top:2px}
+.menu-stack{display:flex;flex-direction:column;gap:48px}.menu-stack h3{margin-bottom:-33px}.menu-stack .action-btn{margin-bottom:0}.menu-stack #current-cumulative-value{margin:0}
+.calendar-day{height:64px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;overflow:hidden}.calendar-day.empty{pointer-events:none}.calendar-day .dn{font-size:11px;opacity:.85}.calendar-day .sy{font-size:15px;font-weight:bold}.calendar-day .vl{font-size:9px}.calendar-day.locked{cursor:not-allowed}.calendar-day.locked:hover{transform:none}
+.calendar-title-btn{background:#ecf0f1;border:1px solid #bdc3c7;border-radius:8px;padding:8px 16px;font-size:18px;font-weight:bold;color:#34495e;cursor:pointer}.calendar-title-btn:hover{background:#dfe6e9}
+.month-summary{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.month-summary div{flex:1 1 140px;background:#d1ecf1;border-left:4px solid #17a2b8;border-radius:8px;padding:12px;font-size:15px;color:#0c5460}
+.year-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:20px 0}.year-month{border:1px solid #ddd;border-radius:10px;padding:10px;cursor:pointer;background:#fff;transition:box-shadow .2s}.year-month:hover{box-shadow:0 4px 12px rgba(0,0,0,.15)}.year-month h4{text-align:center;color:#2c3e50;margin-bottom:2px}.year-month .ysum{text-align:center;font-size:11px;color:#7f8c8d;margin-bottom:6px}.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.mini-day{font-size:10px;text-align:center;padding:3px 0;border-radius:3px}.mini-day.no-data{background:#ecf0f1;color:#7f8c8d}
+
+.calendar-day.missing{border:2px dashed #f1c40f}
+.mini-day.v125{background:#9b59b6;color:#fff}.mini-day.v1{background:#3498db;color:#fff}.mini-day.v075{background:#2ecc71;color:#fff}.mini-day.v025{background:#a9dfbf;color:#2c3e50}.mini-day.v0{background:#f9e79f;color:#2c3e50}.mini-day.vm025{background:#f8b878;color:#2c3e50}.mini-day.vm075{background:#e67e22;color:#fff}.mini-day.vm1{background:#ec7063;color:#fff}.mini-day.vm125{background:#e74c3c;color:#fff}
+.year-month .ysum{font-size:14px;font-weight:bold;color:#2c3e50}
+#current-cumulative-value .tv-title{font-size:15px;color:#2c3e50;margin-bottom:8px}.tv-row{display:flex;justify-content:space-around;align-items:center;gap:6px;font-size:16px}.tv-row span{flex:1 1 0;min-width:0;text-align:center}.tv-row .tv-trend{font-size:22px;font-weight:bold;line-height:1}
 </style>
 </head>
 <body>
-<div class="page">
-<h1>✅ Günlük Görevler</h1>
-
-<div class="card">
-<div class="cal-head">
-<button class="icon-btn" onclick="changeMonth(-1)">‹</button>
-<div class="cal-title" id="cal-title"></div>
-<button class="icon-btn" onclick="changeMonth(1)">›</button>
-<button class="icon-btn" onclick="openSettings()" title="Rutinler">⚙️</button>
+<h1>📅 Kümülatif Veri Kaydedici</h1>
+<div style="text-align:center;color:#7f8c8d;font-size:14px;margin-bottom:15px;">
+<span id="days-passed"></span>
 </div>
-<div class="weekdays"><div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div></div>
-<div class="cal-grid" id="cal-grid"></div>
-<h3 id="day-title" style="margin-top:16px;"></h3>
-<div id="day-list"></div>
-<div class="add-row"><input type="text" id="new-task" placeholder="Yeni görev ekle..." onkeydown="if(event.key==='Enter')addTask()"><button class="btn green" onclick="addTask()">Ekle</button></div>
+<div class="container">
+<div class="data-section menu-stack">
+<h3>Ana Menü</h3>
+<div id="current-cumulative-value"></div>
+<button class="action-btn blue" onclick="openCalendarModal()">📅 Değer Takvimini Göster</button>
+<button class="action-btn red" onclick="openSpecialCalculation()">🔬 Özel Hesaplama Grafiği</button>
+<button class="action-btn purple" onclick="window.open('https://developerfield.github.io/code25s/anlzH6.2.2.html','_blank')">🌐 Harici Siteye Git</button>
+<button class="action-btn green" onclick="openExternal2()">🌍 Harici Site 2</button>
 </div>
-
-<div class="card yellow"><h3>🔔 Bugünün Görevleri & Duyuruları</h3><div id="ann-list"></div></div>
-
-<div class="card"><h3>🪣 Bucket List</h3><div id="bucket-list"></div>
-<div class="add-row"><input type="text" id="new-bucket" placeholder="Yeni etkinlik ekle..." onkeydown="if(event.key==='Enter')addBucket()"><button class="btn green" onclick="addBucket()">Ekle</button></div></div>
-
-<div class="card red"><h3>📌 Önceki Günlerden Gelen Görevler</h3><div id="carried-list"></div></div>
-
-<button class="btn red big" onclick="openFailed()">⚠️ Zamanı Geçmiş Başarısız Görevler</button>
 </div>
-
-<div id="props-modal" class="modal"><div class="modal-content">
-<span class="close-modal" onclick="closeModal('props-modal')">&times;</span>
-<h3 id="props-title">Görev Ayarları</h3>
-<div id="props-body"></div>
-</div></div>
-
-<div id="settings-modal" class="modal"><div class="modal-content">
-<span class="close-modal" onclick="closeModal('settings-modal')">&times;</span>
-<h3>⚙️ Sürekli Rutinler</h3>
-<div id="routine-list"></div>
-<h3 style="margin-top:18px;">Yeni Rutin Ekle</h3>
-<div class="form-grid">
-<div class="full"><label>Tür</label><select id="r-kind" onchange="syncForm()">
-<option value="duyuru">🔔 Duyuru (tik gerekmez)</option>
-<option value="gorev">✅ Tikli rutin görev</option>
-<option value="kismi">📌 Kısmi mutlak görev (başlangıç → bitiş)</option></select></div>
-<div class="full"><label>Başlık</label><input type="text" id="r-title" placeholder="Örn: Matematik dersi"></div>
-<div id="f-repeat"><label>Tekrar</label><select id="r-repeat" onchange="syncForm()"><option value="weekly">Her hafta</option><option value="once">Tek seferlik</option></select></div>
-<div id="f-wd"><label id="l-wd">Gün</label><select id="r-wd"></select></div>
-<div id="f-date" style="display:none"><label>Tarih</label><input type="date" id="r-date"></div>
-<div><label id="l-time">Saat</label><input type="time" id="r-time"></div>
-<div id="f-ewd" style="display:none"><label>Bitiş günü</label><select id="r-ewd"></select></div>
-<div id="f-etime" style="display:none"><label>Bitiş saati</label><input type="time" id="r-etime"></div>
+<div id="special-calc-modal" class="modal">
+<div class="modal-content">
+<span class="close-modal" onclick="closeSpecialCalculation()">&times;</span>
+<h2 style="text-align:center;color:#2c3e50;margin-bottom:20px;">🔬 Özel Hesaplama Grafiği</h2>
+<div class="date-range-control">
+<button class="range-btn" onclick="adjustSpecialRange(-30)">Zoom -30</button>
+<button class="range-btn" onclick="adjustSpecialRange(-10)">Zoom -10</button>
+<input type="number" id="days-range-input" value="0" min="0" placeholder="Zoom" onchange="applySpecialRange()">
+<button class="range-btn" onclick="adjustSpecialRange(10)">Zoom +10</button>
+<button class="range-btn" onclick="adjustSpecialRange(30)">Zoom +30</button>
 </div>
-<button class="btn green big" onclick="addRoutine()">Rutini Kaydet</button>
-</div></div>
-
-<div id="failed-modal" class="modal"><div class="modal-content">
-<span class="close-modal" onclick="closeModal('failed-modal')">&times;</span>
-<h3>⚠️ Başarısız Görevler</h3>
-<div id="failed-list"></div>
-</div></div>
-
+<div class="date-range-control" style="margin-top:10px;">
+<button class="range-btn" onclick="shiftSpecialView(-30)">&lt; -30 Gün</button>
+<button class="range-btn" onclick="shiftSpecialView(-10)">&lt; -10 Gün</button>
+<input type="number" id="special-offset-input" value="0" min="0" placeholder="Kaydırma" onchange="applySpecialRange()">
+<button class="range-btn" onclick="shiftSpecialView(10)">+10 Gün &gt;</button>
+<button class="range-btn" onclick="shiftSpecialView(30)">+30 Gün &gt;</button>
+</div>
+<div class="modal-chart-wrapper"><canvas id="specialCalcChart"></canvas></div>
+<div style="display:flex;gap:15px;flex-wrap:wrap;">
+<div class="slope-display" style="flex:1;" id="slope-display"></div>
+<div class="today-value-display" style="flex:1;" id="today-value-display"></div>
+</div>
+<div class="modal-chart-wrapper" style="margin-top:30px;"><canvas id="specialCalcChart2"></canvas></div>
+<div style="display:flex;gap:15px;flex-wrap:wrap;align-items:center;">
+<div class="s-parameter-control" style="flex:0 0 auto;">
+<label for="s-parameter-input">Değer:</label>
+<input type="number" id="s-parameter-input" value="12" step="0.1" onchange="renderSpecialCharts()">
+</div>
+<div class="slope-display" style="flex:1;" id="slope-display-2"></div>
+<div class="today-value-display" style="flex:1;" id="today-value-display-2"></div>
+</div>
+<h3 class="chart-title" style="margin-top:30px;">Grafik 3: Kümülatif Toplam (+Bonus)</h3>
+<div class="modal-chart-wrapper"><canvas id="cumulativePlusChart"></canvas></div>
+<div class="bonus-control">
+<label for="bonus-input">3. ve 4. Grafik Ayarı:</label>
+<div class="bonus-row">
+<input type="number" id="bonus-input" value="0.5" step="0.01" oninput="renderSpecialCharts()">
+<button class="range-btn" onclick="setBonus(0)">0</button>
+<button class="range-btn" onclick="setBonus(0.28)">0.28</button>
+<button class="range-btn" onclick="setBonus(0.5)">0.5</button>
+<div class="bonus-last" id="bonus-last-value">Son: -</div>
+</div>
+</div>
+<h3 class="chart-title" style="margin-top:30px;">Grafik 4: Günlük Değerler (+Bonus)</h3>
+<div class="modal-chart-wrapper"><canvas id="dailyPlusChart"></canvas></div>
+<div class="calc-results">
+<h4>📊 Bugünün Hesaplamaları</h4>
+<div class="calc-row">
+<div class="calc-item" id="calc-result-1"></div>
+<div class="calc-item" id="calc-result-2"></div>
+</div>
+</div>
+<div class="missing-dates-container">
+<h4 style="color:#2c3e50;margin-bottom:15px;">📅 Veri Girilmeyen Tarihler</h4>
+<div id="missing-dates-list" class="missing-dates-list"></div>
+</div>
+<button class="action-btn orange" onclick="toggleTrendVisibility()" style="margin-top:20px;"><span id="trend-text">👁️ Trend Analizini Göster</span></button>
+<div id="trend-container" style="display:none;">
+<div id="trend-analysis"></div>
+</div>
+</div>
+</div>
+<div id="calendar-modal" class="modal">
+<div class="modal-content">
+<span class="close-modal" onclick="closeCalendarModal()">&times;</span>
+<h2 style="text-align:center;color:#2c3e50;margin-bottom:20px;">📅 Değer Takvimi</h2>
+<div class="calendar-header">
+<button id="cal-prev" onclick="changeMonth(-1)">← Önceki Ay</button>
+<button id="calendar-month" class="calendar-title-btn" onclick="toggleYearView()"></button>
+<button id="cal-next" onclick="changeMonth(1)">Sonraki Ay →</button>
+</div>
+<div id="month-view">
+<div class="calendar-weekdays">
+<div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div>
+</div>
+<div id="calendar-grid" class="calendar-grid"></div>
+<div id="month-summary" class="month-summary"></div>
+</div>
+<div id="year-view" class="year-grid" style="display:none;"></div>
+<div style="margin-top:20px;padding:15px;background-color:#f8f9fa;border-radius:8px;">
+<h4 style="margin-bottom:10px;color:#2c3e50;">Renk Açıklamaları:</h4>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;font-size:13px;">
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#95a5a6;border-radius:3px;"></div><span>Veri Yok</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#9b59b6;border-radius:3px;"></div><span>A++ (1.25)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#3498db;border-radius:3px;"></div><span>A+ (1)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#2ecc71;border-radius:3px;"></div><span>A (0.75)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#a9dfbf;border-radius:3px;"></div><span>B+ (0.25)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#f9e79f;border-radius:3px;"></div><span>B (0)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#f8b878;border-radius:3px;"></div><span>-B (-0.25)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#e67e22;border-radius:3px;"></div><span>C (-0.75)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#ec7063;border-radius:3px;"></div><span>-C (-1)</span></div>
+<div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:18px;background-color:#e74c3c;border-radius:3px;"></div><span>--C (-1.25)</span></div>
+</div>
+</div>
+<div id="month-chart-box">
+<h3 class="chart-title" style="margin-top:25px;">📈 Aylık Grafik (Grafik 2 değerleri)</h3>
+<div id="month-chart-msg" style="text-align:center;color:#7f8c8d;display:none;"></div>
+<div class="modal-chart-wrapper" id="month-chart-wrapper"><canvas id="monthChart"></canvas></div>
+</div>
+</div>
+</div>
+<div id="edit-value-modal" class="modal">
+<div class="modal-content" style="max-width:400px;">
+<span class="close-modal" onclick="closeEditValueModal()">&times;</span>
+<h2 style="text-align:center;color:#2c3e50;margin-bottom:20px;">Değeri Düzenle</h2>
+<div style="text-align:center;margin-bottom:15px;">
+<strong style="font-size:18px;color:#2980b9;" id="edit-date-display"></strong>
+</div>
+<div style="text-align:center;margin-bottom:15px;">
+<strong style="font-size:16px;">Seçilen Değer: <span id="edit-selected-value" style="color:#e74c3c;">0.00</span></strong>
+</div>
+<div class="button-grid" id="edit-button-container"></div>
+<button class="action-btn green" onclick="saveEditedValue()" style="margin-top:15px;">💾 Değeri Kaydet</button>
+<button class="action-btn red" onclick="deleteValue()" style="margin-top:10px;">🗑️ Değeri Sil</button>
+</div>
+</div>
 <script>
 const firebaseConfig={apiKey:"AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",authDomain:"paralayici.firebaseapp.com",projectId:"paralayici",storageBucket:"paralayici.firebasestorage.app",messagingSenderId:"980843550614",appId:"1:980843550614:web:93dd5bda4ddc377b20efb7"};
-const TASKS="todo_tasks",ROUT="todo_routines",BUCKET="todo_bucket",DAYS=[['Pazartesi',1],['Salı',2],['Çarşamba',3],['Perşembe',4],['Cuma',5],['Cumartesi',6],['Pazar',0]],MONTHS=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-/* Görev özellikleri: yeni özellik eklemek için bu listeye bir satır eklemek yeterli */
-const PROPS=[{key:'mutlak',label:'📌 Mutlak görev',desc:'Tamamlanmazsa başarısız sayılmaz, her gün "Önceki günlerden gelen görevler" kutusunda görünür.'}];
-let db,tasks=[],routines=[],bucket=[],calMonth=new Date(),sel='',curId=null;
-const pad=n=>String(n).padStart(2,'0'),fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)},addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return fmt(d)},todayStr=()=>fmt(new Date()),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){document.body.innerHTML="<h1>Hata</h1><p>Firebase yapılandırma hatası.</p>";}
-
-/* ---------- Yükleme ---------- */
-async function loadAll(){const get=async c=>{const r=[];(await db.collection(c).get()).forEach(d=>r.push({...d.data(),id:d.id}));return r;};try{[tasks,routines,bucket]=await Promise.all([get(TASKS),get(ROUT),get(BUCKET)]);tasks.forEach(t=>{t.props=t.props||{};});await materialize();}catch(e){console.error(e);alert('Veriler yüklenemedi.');}renderAll();}
-function matches(r,ds){return r.repeat==='once'?r.date===ds:(parse(ds).getDay()===r.weekday&&ds>=r.created);}
-async function materialize(){const t0=todayStr(),from=addDays(t0,-60),to=addDays(t0,7),have=new Set(tasks.map(t=>t.id)),batch=db.batch();let n=0;routines.filter(r=>r.kind!=='duyuru').forEach(r=>{for(let ds=(r.created>from?r.created:from);ds<=to;ds=addDays(ds,1)){if(!matches(r,ds))continue;const id=`r_${r.id}_${ds}`;if(have.has(id))continue;const t={id,title:r.title,date:ds,time:r.time||'',done:false,props:{},created:Date.now(),kind:r.kind==='kismi'?'kismi':'task',rid:r.id};if(r.kind==='kismi'){t.endDate=addDays(ds,((r.endWeekday-r.weekday+7)%7)||7);t.endTime=r.endTime||'00:00';}tasks.push(t);batch.set(db.collection(TASKS).doc(id),t);n++;}});if(n)await batch.commit();}
-
-/* ---------- Mantık ---------- */
-const live=()=>tasks.filter(t=>!t.deleted);
-function tasksOn(ds){return live().filter(t=>t.kind==='kismi'?(t.date<=ds&&ds<=t.endDate&&(t.date===ds||!t.done)):t.date===ds).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99')||a.created-b.created);}
-function isFailed(t){if(t.done||t.deleted)return false;if(t.kind==='kismi')return new Date(`${t.endDate}T${t.endTime||'00:00'}`)<new Date();return !t.props.mutlak&&t.date<todayStr();}
-function carried(){const t0=todayStr();return live().filter(t=>!t.done&&t.props.mutlak&&t.kind!=='kismi'&&t.date<t0).sort((a,b)=>a.date.localeCompare(b.date));}
-function announcements(){const t0=todayStr(),tm=addDays(t0,1),a=[],hm=r=>r.time?` (${r.time})`:'';routines.forEach(r=>{if(r.kind==='duyuru'&&matches(r,t0))a.push('Bugün: '+esc(r.title)+hm(r));if(matches(r,tm))a.push('Yarın: '+esc(r.title)+hm(r));});live().filter(t=>!t.done&&t.kind==='kismi'&&t.endDate===t0).forEach(t=>a.push(`⏳ Bugün son: ${esc(t.title)} (${t.endTime})`));return a;}
-
-/* ---------- Çizim ---------- */
-function rowHtml(t,showDate){return `<div class="row"><div class="chk ${t.done?'on':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div><div class="rt ${t.done?'done':''}">${esc(t.title)}${t.props.mutlak?' 📌':''}<br><small>${showDate?parse(t.date).toLocaleDateString('tr-TR')+' ':''}${t.time||''}${t.kind==='kismi'?` → ${parse(t.endDate).toLocaleDateString('tr-TR')} ${t.endTime}`:''}</small></div><div class="dots" onclick="openProps('${t.id}')">⋯</div></div>`;}
-function renderCal(){const y=calMonth.getFullYear(),m=calMonth.getMonth(),first=new Date(y,m,1).getDay(),start=first===0?6:first-1,dim=new Date(y,m+1,0).getDate(),t0=todayStr();document.getElementById('cal-title').textContent=`${MONTHS[m]} ${y}`;let h='';for(let i=0;i<start;i++)h+='<div class="cd empty"></div>';for(let d=1;d<=dim;d++){const ds=`${y}-${pad(m+1)}-${pad(d)}`,ts=live().filter(t=>t.kind!=='kismi'&&t.date===ds);let dot='';if(ts.length)dot=ts.every(t=>t.done)?'g':(ds<t0&&ts.some(t=>!t.done&&!t.props.mutlak)?'r':'y');h+=`<div class="cd ${ds===t0?'today':''} ${ds===sel?'sel':''}" onclick="selectDay('${ds}')">${d}${dot?`<span class="dot ${dot}"></span>`:''}</div>`;}document.getElementById('cal-grid').innerHTML=h;}
-function renderDay(){const d=parse(sel);document.getElementById('day-title').textContent=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()} — ${DAYS.find(x=>x[1]===d.getDay())[0]}`;const ts=tasksOn(sel);document.getElementById('day-list').innerHTML=ts.length?ts.map(t=>rowHtml(t)).join(''):'<div class="empty-note">Bu gün için görev yok.</div>';}
-function renderAnn(){const a=announcements();document.getElementById('ann-list').innerHTML=a.length?a.map(x=>`<div class="ann">🔔 ${x}</div>`).join(''):'<div class="empty-note">Bugün için duyuru yok.</div>';}
-function renderBucket(){document.getElementById('bucket-list').innerHTML=bucket.length?bucket.sort((a,b)=>a.created-b.created).map(b=>`<div class="row"><div class="chk ${b.done?'on':''}" onclick="toggleBucket('${b.id}')">${b.done?'✓':''}</div><div class="rt ${b.done?'done':''}">${esc(b.title)}</div><div class="dots" onclick="delBucket('${b.id}')" title="Sil">×</div></div>`).join(''):'<div class="empty-note">Henüz etkinlik yok.</div>';}
-function renderCarried(){const c=carried();document.getElementById('carried-list').innerHTML=c.length?c.map(t=>rowHtml(t,true)).join(''):'<div class="empty-note">Aktarılan görev yok 🎉</div>';}
-function renderAll(){renderCal();renderDay();renderAnn();renderBucket();renderCarried();}
-function selectDay(ds){sel=ds;renderCal();renderDay();}
-function changeMonth(n){calMonth.setDate(1);calMonth.setMonth(calMonth.getMonth()+n);renderCal();}
-function closeModal(id){document.getElementById(id).style.display='none';}
-
-/* ---------- Görev işlemleri ---------- */
-const find=id=>tasks.find(t=>t.id===id);
-async function toggleTask(id){const t=find(id);t.done=!t.done;await db.collection(TASKS).doc(id).update({done:t.done});renderAll();if(document.getElementById('failed-modal').style.display==='block')openFailed();}
-async function addTask(){const inp=document.getElementById('new-task'),title=inp.value.trim();if(!title)return;const t={title,date:sel,time:'',done:false,props:{},created:Date.now(),kind:'task'},ref=await db.collection(TASKS).add(t);t.id=ref.id;tasks.push(t);inp.value='';renderAll();}
-function openProps(id){curId=id;const t=find(id);document.getElementById('props-title').textContent='Görev Ayarları';document.getElementById('props-body').innerHTML=`<input type="text" id="p-title" value="${esc(t.title)}" onchange="renameTask(this.value)" style="margin-bottom:12px">${PROPS.map(p=>`<label class="prop"><input type="checkbox" ${t.props[p.key]?'checked':''} onchange="setProp('${p.key}',this.checked)"><span><strong>${p.label}</strong><br><small>${p.desc}</small></span></label>`).join('')}<div class="add-row"><input type="date" id="p-date" value="${t.date}"><button class="btn" onclick="moveTask()">Güne Taşı</button></div><button class="btn red big" style="margin-top:14px" onclick="deleteTask()">🗑️ Görevi Sil</button>`;document.getElementById('props-modal').style.display='block';}
-async function renameTask(v){v=v.trim();if(!v)return;const t=find(curId);t.title=v;await db.collection(TASKS).doc(curId).update({title:v});renderAll();}
-async function setProp(k,v){const t=find(curId);t.props[k]=v;await db.collection(TASKS).doc(curId).update({props:t.props});renderAll();}
-async function moveTask(){const v=document.getElementById('p-date').value;if(!v)return;const t=find(curId);if(t.kind==='kismi'){alert('Kısmi görevlerin tarihi rutinden gelir.');return;}t.date=v;await db.collection(TASKS).doc(curId).update({date:v});closeModal('props-modal');renderAll();}
-async function deleteTask(){if(!confirm('Bu görev silinsin mi?'))return;const t=find(curId);if(t.id.startsWith('r_')){t.deleted=true;await db.collection(TASKS).doc(curId).update({deleted:true});}else{await db.collection(TASKS).doc(curId).delete();tasks=tasks.filter(x=>x.id!==curId);}closeModal('props-modal');renderAll();}
-
-/* ---------- Bucket list ---------- */
-async function addBucket(){const inp=document.getElementById('new-bucket'),title=inp.value.trim();if(!title)return;const b={title,done:false,created:Date.now()},ref=await db.collection(BUCKET).add(b);b.id=ref.id;bucket.push(b);inp.value='';renderBucket();}
-async function toggleBucket(id){const b=bucket.find(x=>x.id===id);b.done=!b.done;await db.collection(BUCKET).doc(id).update({done:b.done});renderBucket();}
-async function delBucket(id){if(!confirm('Silinsin mi?'))return;await db.collection(BUCKET).doc(id).delete();bucket=bucket.filter(x=>x.id!==id);renderBucket();}
-
-/* ---------- Başarısız görevler ---------- */
-function openFailed(){const f=live().filter(isFailed).sort((a,b)=>(a.kind==='kismi'?a.endDate:a.date).localeCompare(b.kind==='kismi'?b.endDate:b.date));document.getElementById('failed-list').innerHTML=f.length?f.map(t=>rowHtml(t,true)).join(''):'<div class="empty-note">Başarısız görev yok 🎉</div>';document.getElementById('failed-modal').style.display='block';}
-
-/* ---------- Rutinler ---------- */
-function syncForm(){const k=document.getElementById('r-kind').value,once=document.getElementById('r-repeat').value==='once'&&k!=='kismi',show=(id,v)=>document.getElementById(id).style.display=v?'block':'none';if(k==='kismi')document.getElementById('r-repeat').value='weekly';show('f-repeat',k!=='kismi');show('f-wd',!once);show('f-date',once);show('f-ewd',k==='kismi');show('f-etime',k==='kismi');document.getElementById('l-wd').textContent=k==='kismi'?'Başlangıç günü':'Gün';document.getElementById('l-time').textContent=k==='kismi'?'Başlangıç saati':'Saat';}
-function describe(r){const wd=v=>DAYS.find(x=>x[1]===v)[0],k={duyuru:'Duyuru',gorev:'Tikli',kismi:'Kısmi mutlak'}[r.kind];return `<span class="tag">${k}</span>${r.repeat==='once'?parse(r.date).toLocaleDateString('tr-TR'):'Her '+wd(r.weekday)} ${r.time||''}${r.kind==='kismi'?` → ${wd(r.endWeekday)} ${r.endTime||''}`:''}`;}
-function openSettings(){const opts=DAYS.map(d=>`<option value="${d[1]}">${d[0]}</option>`).join('');document.getElementById('r-wd').innerHTML=opts;document.getElementById('r-ewd').innerHTML=opts;syncForm();document.getElementById('routine-list').innerHTML=routines.length?routines.map(r=>`<div class="rline"><span><strong>${esc(r.title)}</strong><br>${describe(r)}</span><button class="btn red" onclick="deleteRoutine('${r.id}')">Sil</button></div>`).join(''):'<div class="empty-note">Henüz rutin yok.</div>';document.getElementById('settings-modal').style.display='block';}
-async function addRoutine(){const g=id=>document.getElementById(id).value,kind=g('r-kind'),title=g('r-title').trim();if(!title){alert('Başlık yaz.');return;}const repeat=kind==='kismi'?'weekly':g('r-repeat'),r={kind,title,repeat,weekday:parseInt(g('r-wd')),date:g('r-date'),time:g('r-time'),endWeekday:parseInt(g('r-ewd')),endTime:g('r-etime'),created:todayStr()};if(repeat==='once'&&!r.date){alert('Tarih seç.');return;}const ref=await db.collection(ROUT).add(r);r.id=ref.id;routines.push(r);document.getElementById('r-title').value='';await materialize();renderAll();openSettings();}
-async function deleteRoutine(id){if(!confirm('Rutin silinsin mi? (Tamamlanmamış gelecek görevleri de silinir)'))return;await db.collection(ROUT).doc(id).delete();routines=routines.filter(r=>r.id!==id);const t0=todayStr(),batch=db.batch();tasks.filter(t=>t.rid===id&&!t.done&&t.date>=t0).forEach(t=>{t.deleted=true;batch.update(db.collection(TASKS).doc(t.id),{deleted:true});});await batch.commit();renderAll();openSettings();}
-
-window.onclick=e=>{['props-modal','settings-modal','failed-modal'].forEach(id=>{const m=document.getElementById(id);if(e.target==m)m.style.display='none';});};
-window.onload=()=>{sel=todayStr();loadAll();};
+let db,chartInstance3=null,chartInstance4=null,specialChartInstance=null,specialChartInstance2=null,currentDaysRange=0,currentDaysOffset=0,allSpecialData=null,allChartData=null,calendarMonth=new Date(),calendarData=null;
+const buttonValues=[-1.25,-0.25,0.75,-1,0,1,-0.75,0.25,1.25],collectionName="cumulative_daily_data";
+const SYMBOLS={'-1.25':'--C','-1':'-C','-0.75':'C','-0.25':'-B','0':'B','0.25':'B+','0.75':'A','1':'A+','1.25':'A++'},LOCK_DAYS=40,EXTERNAL_SITE_2_URL='';
+let calendarView='month',monthChartInstance=null;
+function symOf(v){const x=SYMBOLS[String(v)];return x!==undefined?x:Number(v).toFixed(2);}
+function isLocked(dateStr){const[y,m,d]=dateStr.split('-').map(Number),t=new Date(),t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((t0-new Date(y,m-1,d))/86400000)>LOCK_DAYS;}
+function openExternal2(){if(!EXTERNAL_SITE_2_URL){alert('Harici Site 2 adresi henüz tanımlanmadı. Kodun başındaki EXTERNAL_SITE_2_URL değişkenine adresi yaz.');return;}window.open(EXTERNAL_SITE_2_URL,'_blank');}
+try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();const startDate=new Date('2022-10-30'),today=new Date(),diffTime=Math.abs(today-startDate),diffDays=Math.ceil(diffTime/(1000*60*60*24));document.getElementById('days-passed').textContent=`14 Haziran 2015'ten bu güne ${diffDays} gün geçti`;}catch(e){console.error("Firebase hatası:",e);document.body.innerHTML="<h1>Hata</h1><p>Firebase yapılandırma hatası.</p>";}
+function setTrendVisible(v){const c=document.getElementById('trend-container'),t=document.getElementById('trend-text');c.style.display=v?'block':'none';t.textContent=v?'👁️ Trend Analizini Gizle':'👁️ Trend Analizini Göster';}
+function toggleTrendVisibility(){setTrendVisible(document.getElementById('trend-container').style.display==='none');}
+function setBonus(v){document.getElementById('bonus-input').value=v;renderSpecialCharts();}
+function calculateTrend(data){if(data.length<2)return{direction:'neutral',percentage:0};const sum=data.reduce((a,b)=>a+b,0),avg=sum/data.length,recentSum=data.slice(-Math.max(1,Math.floor(data.length/2))).reduce((a,b)=>a+b,0),recentAvg=recentSum/Math.max(1,Math.floor(data.length/2)),change=((recentAvg-avg)/Math.abs(avg||1))*100;if(Math.abs(change)<5)return{direction:'stable',percentage:change};return{direction:change>0?'up':'down',percentage:change};}
+function analyzeTrends(dailyValues){const n=dailyValues.length;if(n<2)return '<p style="text-align:center;color:#7f8c8d;">Trend analizi için yeterli veri yok.</p>';const half=Math.floor(n/2),quarter=Math.floor(n/4),sixteenth=Math.floor(n/16),fullData=dailyValues,lastHalf=dailyValues.slice(-half),lastQuarter=dailyValues.slice(-quarter),lastSixteenth=sixteenth>0?dailyValues.slice(-sixteenth):dailyValues.slice(-1),fullTrend=calculateTrend(fullData),halfTrend=calculateTrend(lastHalf),quarterTrend=calculateTrend(lastQuarter),sixteenthTrend=calculateTrend(lastSixteenth);function getTrendText(trend,label){let icon='📊',className='',text='';if(trend.direction==='up'){icon='📈';className='trend-up';text=`<strong>${label}:</strong> Artış trendinde (${trend.percentage.toFixed(1)}% yükseliş)`;}else if(trend.direction==='down'){icon='📉';className='trend-down';text=`<strong>${label}:</strong> Azalış trendinde (${Math.abs(trend.percentage).toFixed(1)}% düşüş)`;}else{icon='➡️';text=`<strong>${label}:</strong> Stabil trend (${trend.percentage.toFixed(1)}% değişim)`;}return `<div class="trend-box ${className}">${icon} ${text}</div>`;}return `${getTrendText(fullTrend,'Tüm Veriler')}${getTrendText(halfTrend,`Son Yarı (${half} gün)`)}${getTrendText(quarterTrend,`Son Çeyrek (${quarter} gün)`)}${getTrendText(sixteenthTrend,`Son 1/16 (${lastSixteenth.length} gün)`)}`;}
+function processData(allData){let cumulativeSum=0;const labels=[],dailyValues=[],cumulativeData=[];allData.forEach(item=>{cumulativeSum+=item.value;labels.push(item.date);dailyValues.push(item.value);cumulativeData.push(cumulativeSum);});allChartData={labels,dailyValues,cumulativeData};document.getElementById('trend-analysis').innerHTML=analyzeTrends(dailyValues);computeSpecialData(allData);updateMenuValues();}
+async function generateChart(){if(!db)return;const snapshot=await db.collection(collectionName).orderBy("date","asc").get();if(snapshot.empty){allChartData=null;allSpecialData=null;updateMenuValues();document.getElementById('trend-analysis').innerHTML='<p style="text-align:center;color:#7f8c8d;">Veri yok.</p>';return;}const allData=[];snapshot.forEach(doc=>allData.push(doc.data()));processData(allData);}
+function sign(x){if(x>0)return 1;if(x<0)return -1;return 0;}
+function computeSpecialData(allData){const firstDate=new Date(allData[0].date),today=new Date(),allDates=[],dateMap=new Map();allData.forEach(item=>dateMap.set(item.date,item.value));let currentDate=new Date(firstDate);while(currentDate<=today){allDates.push(currentDate.toISOString().split('T')[0]);currentDate.setDate(currentDate.getDate()+1);}const labels=[],calculatedValues=[],calculatedValues2=[],missingDates=[];let Tp=0,Bg=0;for(let i=0;i<allDates.length;i++){const date=allDates[i],Tg=i+1,value=dateMap.get(date);if(value!==undefined){Tp+=value;}else{Bg++;missingDates.push(date);}const numerator=2843+4*(Tp+(Tg-Bg))+(Bg*0.5),numeratorDiv365=numerator/365,denomBase=4*((990+Tg)/365),ratio=numeratorDiv365/denomBase,absRatio=Math.abs(ratio),term1=Math.pow(absRatio,1.62),term2=Math.pow(absRatio,0.62),denominator=1+Math.abs(term2-1),result=100*sign(numeratorDiv365)*(term1/denominator),x=(990+Tg)/365,y=(2843+4*(Tp+(Tg-Bg))+(Bg*0.5))/365;labels.push(date);calculatedValues.push(result);calculatedValues2.push({x:x,y:y});}allSpecialData={labels:labels,calculatedValues:calculatedValues,calculatedValues2:calculatedValues2,missingDates:missingDates,finalTg:allDates.length,finalTp:Tp,finalBg:Bg};}
+function trendDirections(dv){const n=dv.length;if(n<2)return[];const half=Math.floor(n/2),quarter=Math.floor(n/4),sx=Math.floor(n/16);return[dv,dv.slice(-half),dv.slice(-quarter),sx>0?dv.slice(-sx):dv.slice(-1)].map(a=>calculateTrend(a).direction);}
+function updateMenuValues(){const el=document.getElementById('current-cumulative-value');if(!allChartData||!allSpecialData){el.innerHTML='<div class="tv-title">Bugünün Değerleri</div><div style="font-size:14px;color:#7f8c8d;">Veri yok</div>';return;}const S=parseFloat(document.getElementById('s-parameter-input').value)||12,arctan4=Math.atan(4),cum=allChartData.cumulativeData[allChartData.cumulativeData.length-1],cv=allSpecialData.calculatedValues,last=allSpecialData.calculatedValues2[allSpecialData.calculatedValues2.length-1],a=Math.round(S*(-(last.x*Math.sin(arctan4))+(last.y*Math.cos(arctan4)))*100)/100,v1=cv[cv.length-1].toFixed(4),score=trendDirections(allChartData.dailyValues).reduce((t,d)=>t+(d==='up'?1:d==='down'?-1:0),0);let arrow,color;if(score>0){arrow='▲';color='#27ae60';}else if(score<0){arrow='▼';color='#e74c3c';}else{arrow='—';color='#f1c40f';}el.innerHTML=`<div class="tv-title">Bugünün Değerleri</div><div class="tv-row"><span title="Kümülatif değer">${cum.toFixed(2)}</span><span title="Grafik 2 bugünün değeri (a)">${a}</span><span title="Grafik 1 bugünün değeri">${v1}</span><span class="tv-trend" title="Trend yönü" style="color:${color};">${arrow}</span></div>`;}
+async function openSpecialCalculation(){if(!db){alert("Firebase başlatılamadı.");return;}const snapshot=await db.collection(collectionName).orderBy("date","asc").get();if(snapshot.empty){alert("Veri yok. Önce veri girin.");return;}const allData=[];snapshot.forEach(doc=>allData.push(doc.data()));processData(allData);currentDaysRange=0;currentDaysOffset=0;document.getElementById('days-range-input').value=0;document.getElementById('special-offset-input').value=0;setTrendVisible(false);document.getElementById('special-calc-modal').style.display='block';renderSpecialCharts();}
+function adjustSpecialRange(delta){const input=document.getElementById('days-range-input');let newValue=parseInt(input.value)||0;newValue+=delta;if(newValue<0)newValue=0;if(allSpecialData&&newValue>allSpecialData.labels.length)newValue=allSpecialData.labels.length;input.value=newValue;applySpecialRange();}
+function shiftSpecialView(delta){const input=document.getElementById('special-offset-input');let newValue=parseInt(input.value)||0;newValue+=delta;if(newValue<0)newValue=0;if(allSpecialData){const maxOffset=allSpecialData.labels.length-(currentDaysRange||allSpecialData.labels.length);if(newValue>maxOffset)newValue=maxOffset;}input.value=newValue;applySpecialRange();}
+function applySpecialRange(){const rangeInput=document.getElementById('days-range-input'),offsetInput=document.getElementById('special-offset-input');currentDaysRange=parseInt(rangeInput.value)||0;currentDaysOffset=parseInt(offsetInput.value)||0;if(currentDaysRange<0)currentDaysRange=0;if(currentDaysOffset<0)currentDaysOffset=0;if(allSpecialData){if(currentDaysRange>allSpecialData.labels.length)currentDaysRange=allSpecialData.labels.length;const maxOffset=allSpecialData.labels.length-(currentDaysRange||allSpecialData.labels.length);if(currentDaysOffset>maxOffset)currentDaysOffset=maxOffset;}renderSpecialCharts();}
+function renderSpecialCharts(){if(!allSpecialData)return;updateMenuValues();const{labels,calculatedValues,calculatedValues2,missingDates,finalTg,finalTp,finalBg}=allSpecialData,S=parseFloat(document.getElementById('s-parameter-input').value)||12,arctan4=Math.atan(4),actualValues2=calculatedValues2.map(item=>S*(-(item.x*Math.sin(arctan4))+(item.y*Math.cos(arctan4))));
+const n=labels.length;let sIdx=0,eIdx=n;if(currentDaysRange>0&&currentDaysRange<n){sIdx=Math.max(0,n-currentDaysRange-currentDaysOffset);eIdx=n-currentDaysOffset;}else if(currentDaysOffset>0){eIdx=n-currentDaysOffset;}
+const displayLabels=labels.slice(sIdx,eIdx),displayValues=calculatedValues.slice(sIdx,eIdx),displayValues2=actualValues2.slice(sIdx,eIdx);
+const fmt=date=>{const d=new Date(date);return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()).slice(-2)}`;},formattedLabels=displayLabels.map(fmt);
+const firstValue=displayValues[0],lastValue=displayValues[displayValues.length-1],slope=((lastValue-firstValue)/displayValues.length).toFixed(4),firstValue2=displayValues2[0],lastValue2=displayValues2[displayValues2.length-1],slope2=((lastValue2-firstValue2)/displayValues2.length).toFixed(4),todayValue=calculatedValues[calculatedValues.length-1].toFixed(4),lastData=calculatedValues2[calculatedValues2.length-1],todayCalc1=Math.round(S*(-(lastData.x*Math.sin(arctan4))+(lastData.y*Math.cos(arctan4)))*100)/100,todayCalc2=Math.round(S*((lastData.x*Math.cos(arctan4))+(lastData.y*Math.sin(arctan4)))*100)/100,calc1=((990+finalTg)/365).toFixed(4),calc2=((2843+4*(finalTp+(finalTg-finalBg))+(finalBg*0.5))/365).toFixed(4);
+document.getElementById('slope-display').innerHTML=`📈 Eğim: <strong>${slope}</strong>`;document.getElementById('today-value-display').innerHTML=`📅 Bugünün Değeri: <strong>${todayValue}</strong>`;document.getElementById('slope-display-2').innerHTML=`📈 Eğim: <strong>${slope2}</strong>`;document.getElementById('today-value-display-2').innerHTML=`📅 Bugünün Değerleri: <strong>${todayCalc1}</strong> , <strong>${todayCalc2}</strong>`;document.getElementById('calc-result-1').innerHTML=`<strong>${calc1}</strong>`;document.getElementById('calc-result-2').innerHTML=`<strong>${calc2}</strong>`;
+document.getElementById('missing-dates-list').innerHTML=missingDates.length>0?missingDates.map(date=>{const d=new Date(date);return `<span class="missing-date-item">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</span>`;}).join(''):'<p style="text-align:center;color:#27ae60;">Tüm günlere veri girilmiş! 🎉</p>';
+const opts=()=>({responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true}},scales:{x:{title:{display:true,text:'Tarih',font:{size:12}},grid:{display:false},ticks:{maxRotation:45,minRotation:45,autoSkip:true,maxTicksLimit:20}},y:{title:{display:true,text:'Değer',font:{size:12}},beginAtZero:false}}});
+if(specialChartInstance)specialChartInstance.destroy();specialChartInstance=new Chart(document.getElementById('specialCalcChart').getContext('2d'),{type:'line',data:{labels:formattedLabels,datasets:[{label:'Grafik 1 Değeri',data:displayValues,borderColor:'#e74c3c',backgroundColor:'rgba(231,76,60,0.2)',tension:0.3,fill:true,pointRadius:2,pointBackgroundColor:'#c0392b',borderWidth:2}]},options:opts()});
+if(specialChartInstance2)specialChartInstance2.destroy();specialChartInstance2=new Chart(document.getElementById('specialCalcChart2').getContext('2d'),{type:'line',data:{labels:formattedLabels,datasets:[{label:'Grafik 2 Değeri',data:displayValues2,borderColor:'#9b59b6',backgroundColor:'rgba(155,89,182,0.2)',tension:0.3,fill:true,pointRadius:2,pointBackgroundColor:'#8e44ad',borderWidth:2}]},options:opts()});
+/* Grafik 3 & 4: girilen günler üzerinden, aynı tarih aralığıyla */
+let bonus=parseFloat(document.getElementById('bonus-input').value);if(isNaN(bonus))bonus=0;
+let l3=[],d3=[],c3=[];if(allChartData&&displayLabels.length>0){const startDate=displayLabels[0],endDate=displayLabels[displayLabels.length-1];let cum=0;allChartData.labels.forEach((dt,i)=>{const v=allChartData.dailyValues[i]+bonus;cum+=v;if(dt>=startDate&&dt<=endDate){l3.push(fmt(dt));d3.push(v);c3.push(cum);}});}
+document.getElementById('bonus-last-value').innerHTML=c3.length?`Son: <strong style="margin-left:4px;">${c3[c3.length-1].toFixed(2)}</strong>`:'Son: -';
+if(chartInstance3)chartInstance3.destroy();chartInstance3=new Chart(document.getElementById('cumulativePlusChart').getContext('2d'),{type:'line',data:{labels:l3,datasets:[{label:'Kümülatif Değer (+Bonus)',data:c3,borderColor:'#3498db',backgroundColor:'rgba(52,152,219,0.2)',tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#2980b9',borderWidth:2}]},options:opts()});
+if(chartInstance4)chartInstance4.destroy();chartInstance4=new Chart(document.getElementById('dailyPlusChart').getContext('2d'),{type:'bar',data:{labels:l3,datasets:[{label:'Günlük Değer (+Bonus)',data:d3,backgroundColor:d3.map(v=>v>=0?'rgba(46,204,113,0.6)':'rgba(231,76,60,0.6)'),borderColor:d3.map(v=>v>=0?'#2ecc71':'#e74c3c'),borderWidth:2}]},options:opts()});}
+function closeSpecialCalculation(){document.getElementById('special-calc-modal').style.display='none';}
+async function openCalendarModal(){if(!db){alert("Firebase başlatılamadı.");return;}const snapshot=await db.collection(collectionName).get();calendarData=new Map();const arr=[];snapshot.forEach(doc=>{const data=doc.data();calendarData.set(data.date,data.value);arr.push(data);});arr.sort((a,b)=>a.date<b.date?-1:1);if(arr.length)computeSpecialData(arr);calendarView='month';document.getElementById('calendar-modal').style.display='block';renderCalendar();}
+function renderMonthChart(year,month){if(monthChartInstance){monthChartInstance.destroy();monthChartInstance=null;}const msg=document.getElementById('month-chart-msg'),wrap=document.getElementById('month-chart-wrapper'),prefix=`${year}-${String(month+1).padStart(2,'0')}-`,labels=[],vals=[];if(allSpecialData){const S=parseFloat(document.getElementById('s-parameter-input').value)||12,arctan4=Math.atan(4);allSpecialData.labels.forEach((dt,i)=>{if(dt.startsWith(prefix)){const it=allSpecialData.calculatedValues2[i],d=new Date(dt);labels.push(`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()).slice(-2)}`);vals.push(S*(-(it.x*Math.sin(arctan4))+(it.y*Math.cos(arctan4))));}});}if(!labels.length){msg.textContent='Bu ay için grafik verisi yok.';msg.style.display='block';wrap.style.display='none';return;}msg.style.display='none';wrap.style.display='block';monthChartInstance=new Chart(document.getElementById('monthChart').getContext('2d'),{type:'line',data:{labels:labels,datasets:[{label:'Grafik 2 Değeri',data:vals,borderColor:'#9b59b6',backgroundColor:'rgba(155,89,182,0.2)',tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#8e44ad',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true}},scales:{x:{title:{display:true,text:'Tarih',font:{size:12}},grid:{display:false},ticks:{maxRotation:45,minRotation:45,autoSkip:true,maxTicksLimit:20}},y:{title:{display:true,text:'Değer',font:{size:12}},beginAtZero:false}}}});}
+function closeCalendarModal(){document.getElementById('calendar-modal').style.display='none';}
+function changeMonth(delta){calendarMonth.setDate(1);if(calendarView==='year')calendarMonth.setFullYear(calendarMonth.getFullYear()+delta);else calendarMonth.setMonth(calendarMonth.getMonth()+delta);renderCalendar();}
+function toggleYearView(){calendarView=calendarView==='month'?'year':'month';renderCalendar();}
+function selectMonth(m){calendarMonth.setDate(1);calendarMonth.setMonth(m);calendarView='month';renderCalendar();}
+function getValueClass(value){if(value===1.25)return 'v125';if(value===1)return 'v1';if(value===0.75)return 'v075';if(value===0.25)return 'v025';if(value===0)return 'v0';if(value===-0.25)return 'vm025';if(value===-0.75)return 'vm075';if(value===-1)return 'vm1';if(value===-1.25)return 'vm125';if(value>0.5)return 'v075';if(value>0)return 'v025';if(value===0)return 'v0';if(value>-0.5)return 'vm025';if(value>-1)return 'vm075';if(value>=-1.25)return 'vm1';return 'no-data';}
+function renderCalendar(){const year=calendarMonth.getFullYear(),month=calendarMonth.getMonth(),monthNames=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],isYear=calendarView==='year';
+document.getElementById('month-view').style.display=isYear?'none':'block';document.getElementById('year-view').style.display=isYear?'grid':'none';document.getElementById('month-chart-box').style.display=isYear?'none':'block';
+document.getElementById('cal-prev').textContent=isYear?'← Önceki Yıl':'← Önceki Ay';document.getElementById('cal-next').textContent=isYear?'Sonraki Yıl →':'Sonraki Ay →';
+document.getElementById('calendar-month').textContent=isYear?`${year} ▾`:`${monthNames[month]} ${year} ▾`;
+const pad=n=>String(n).padStart(2,'0'),monthSum=(y,m)=>{let t=0;const pre=`${y}-${pad(m+1)}-`;if(calendarData)calendarData.forEach((v,k)=>{if(k.startsWith(pre))t+=v;});return t;};
+if(isYear){let h='';for(let m=0;m<12;m++){const first=new Date(year,m,1).getDay(),start=first===0?6:first-1,dim=new Date(year,m+1,0).getDate();let cells='';for(let e=0;e<start;e++)cells+='<div></div>';for(let d=1;d<=dim;d++){const v=calendarData?calendarData.get(`${year}-${pad(m+1)}-${pad(d)}`):undefined;cells+=`<div class="mini-day ${v===undefined?'no-data':getValueClass(v)}">${d}</div>`;}h+=`<div class="year-month" onclick="selectMonth(${m})"><h4>${monthNames[m]}</h4><div class="ysum">Toplam: ${monthSum(year,m).toFixed(2)}</div><div class="mini-grid">${cells}</div></div>`;}document.getElementById('year-view').innerHTML=h;return;}
+const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate(),startDay=firstDay===0?6:firstDay-1;let html='';for(let i=0;i<startDay;i++)html+='<div class="calendar-day empty"></div>';
+const _t=new Date(),todayStr=`${_t.getFullYear()}-${pad(_t.getMonth()+1)}-${pad(_t.getDate())}`;let firstKey=null;if(calendarData)calendarData.forEach((v,k)=>{if(firstKey===null||k<firstKey)firstKey=k;});
+for(let day=1;day<=daysInMonth;day++){const dateStr=`${year}-${pad(month+1)}-${pad(day)}`,value=calendarData?calendarData.get(dateStr):undefined,locked=isLocked(dateStr);let cls='calendar-day '+(value===undefined?'no-data':getValueClass(value))+(locked?' locked':'');const missing=value===undefined&&firstKey!==null&&dateStr>=firstKey&&dateStr<todayStr;if(missing)cls+=' missing';const title=locked?(value===undefined?'Veri girilmemiş - kilitli (40 günden eski)':'Kilitli (40 günden eski)'):(value!==undefined?'Değer: '+value.toFixed(2):(missing?'Veri girilmemiş - Tıkla ekle':'Veri yok - Tıkla ekle'));html+=`<div class="${cls}" onclick="openEditValue('${dateStr}',${value!==undefined?value:'null'})" title="${title}"><span class="dn">${day}</span>${value!==undefined?`<span class="sy">${symOf(value)}</span><span class="vl">${value.toFixed(2)}</span>`:''}</div>`;}
+document.getElementById('calendar-grid').innerHTML=html;
+let cum=0;const lastKey=`${year}-${pad(month+1)}-${pad(daysInMonth)}`;if(calendarData)calendarData.forEach((v,k)=>{if(k<=lastKey)cum+=v;});
+document.getElementById('month-summary').innerHTML=`<div>📊 Ay Toplamı: <strong>${monthSum(year,month).toFixed(2)}</strong></div><div>📈 Ay Sonu Kümülatif: <strong>${cum.toFixed(2)}</strong></div>`;renderMonthChart(year,month);}
+let editingDate=null,editingValue=0;
+function setEditSel(){document.getElementById('edit-selected-value').textContent=`${symOf(editingValue)} (${editingValue.toFixed(2)})`;}
+function openEditValue(dateStr,currentValue){if(isLocked(dateStr)){alert(`${dateStr} tarihi ${LOCK_DAYS} günden eski olduğu için değiştirilemez.`);return;}editingDate=dateStr;editingValue=currentValue!==null?currentValue:0;document.getElementById('edit-date-display').textContent=dateStr;setEditSel();const container=document.getElementById('edit-button-container');container.innerHTML='';buttonValues.forEach(value=>{const button=document.createElement('button');button.innerHTML=`<span class="sym">${symOf(value)}</span><span class="val">${value.toFixed(2)}</span>`;button.onclick=()=>{editingValue=value;setEditSel();};container.appendChild(button);});document.getElementById('edit-value-modal').style.display='block';}
+function closeEditValueModal(){document.getElementById('edit-value-modal').style.display='none';}
+async function saveEditedValue(){if(!db||!editingDate){alert("Hata oluştu.");return;}if(isLocked(editingDate)){alert("Bu tarih kilitli.");return;}try{await db.collection(collectionName).doc(editingDate).set({date:editingDate,value:editingValue,timestamp:firebase.firestore.FieldValue.serverTimestamp()});closeEditValueModal();await openCalendarModal();generateChart();alert(`✅ ${editingDate} için ${editingValue.toFixed(2)} kaydedildi!`);}catch(error){console.error("Kayıt hatası:",error);alert("❌ Kayıt hatası");}}
+async function deleteValue(){if(!db||!editingDate){alert("Hata oluştu.");return;}if(isLocked(editingDate)){alert("Bu tarih kilitli.");return;}if(!confirm(`${editingDate} tarihindeki veriyi silmek istediğinize emin misiniz?`))return;try{await db.collection(collectionName).doc(editingDate).delete();closeEditValueModal();await openCalendarModal();generateChart();alert(`✅ ${editingDate} tarihi silindi!`);}catch(error){console.error("Silme hatası:",error);alert("❌ Silme hatası");}}
+window.onclick=function(event){['special-calc-modal','calendar-modal','edit-value-modal'].forEach(id=>{const m=document.getElementById(id);if(event.target==m)m.style.display='none';});}
+window.onload=()=>{generateChart();};
 </script>
 </body>
 </html>
